@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package microservice;
+option go_package="microservicepb";
+
+message Microservice {
+    string first_name = 1;
+    string last_name = 2;
+}
+
+message MicroserviceRequest {
+    Microservice microservice = 1;
+}
+
+message MicroserviceResponse {
+    string Result = 1;
+}
+
+service MicroserviceService { 
+    // Unary
+    rpc Microservice(MicroserviceRequest) returns (MicroserviceResponse) {};
+}
