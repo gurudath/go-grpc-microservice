@@ -37,5 +37,5 @@ func doUnary(c microservicepb.MicroserviceServiceClient) {
 	if err != nil {
 		log.Fatalf("Error Client %v", err)
 	}
-	log.Printf("Response of Greeting: %v", res.Result)
+	log.Printf("Response of Microservice: %v", res.Result)
 }

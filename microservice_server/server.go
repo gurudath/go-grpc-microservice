@@ -18,7 +18,7 @@ func (*server) Microservice(ctx context.Context, req *microservicepb.Microservic
 	res := &microservicepb.MicroserviceResponse{
 		Result: result,
 	}
-	log.Printf("Request of Greeting: %v", req)
+	log.Printf("Request of Microservice: %v", req)
 	return res, nil
 }
 
