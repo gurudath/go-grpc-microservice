@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"go-grpc-microservice/microservice/microservicepb"
+	"io"
 	"log"
 
 	"google.golang.org/grpc"
@@ -20,12 +21,11 @@ func main() {
 	defer cc.Close()
 
 	c := microservicepb.NewMicroserviceServiceClient(cc)
-	// fmt.Printf("Creating client: %f\n", c)
-	doUnary(c)
+	doServerStream(c)
 
 }
 
-func doUnary(c microservicepb.MicroserviceServiceClient) {
+func doServerStream(c microservicepb.MicroserviceServiceClient) {
 	fmt.Println("Starting Unary")
 	req := &microservicepb.MicroserviceRequest{
 		Microservice: &microservicepb.Microservice{
@@ -37,5 +37,14 @@ func doUnary(c microservicepb.MicroserviceServiceClient) {
 	if err != nil {
 		log.Fatalf("Error Client %v", err)
 	}
-	log.Printf("Response of Greeting: %v", res.Result)
+	for {
+		msg, err := res.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Error Reading Client %v", err)
+		}
+		log.Printf("Response of Microservice: %v", msg.GetResult())
+	}
 }

@@ -1,25 +1,30 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"go-grpc-microservice/microservice/microservicepb"
 	"log"
 	"net"
+	"strconv"
+	"time"
 
 	"google.golang.org/grpc"
 )
 
 type server struct{}
 
-func (*server) Microservice(ctx context.Context, req *microservicepb.MicroserviceRequest) (*microservicepb.MicroserviceResponse, error) {
+func (*server) Microservice(req *microservicepb.MicroserviceRequest, stream microservicepb.MicroserviceService_MicroserviceServer) error {
+	fmt.Println("Triggering Microservice Server")
 	firstName := req.GetMicroservice().GetFirstName()
-	result := "Hellow " + firstName
-	res := &microservicepb.MicroserviceResponse{
-		Result: result,
+	for i := 0; i < 10; i++ {
+		result := "Hellow " + firstName + " Number " + strconv.Itoa(i)
+		res := &microservicepb.MicroserviceResponse{
+			Result: result,
+		}
+		stream.Send(res)
+		time.Sleep(1000 * time.Millisecond)
 	}
-	log.Printf("Request of Greeting: %v", req)
-	return res, nil
+	return nil
 }
 
 func main() {
