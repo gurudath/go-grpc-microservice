@@ -35,7 +35,7 @@ func (m *Microservice) Reset()         { *m = Microservice{} }
 func (m *Microservice) String() string { return proto.CompactTextString(m) }
 func (*Microservice) ProtoMessage()    {}
 func (*Microservice) Descriptor() ([]byte, []int) {
-	return fileDescriptor_microservice_bbfa2ac3f95c9cd0, []int{0}
+	return fileDescriptor_microservice_b78ff35aeb513d86, []int{0}
 }
 func (m *Microservice) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Microservice.Unmarshal(m, b)
@@ -80,7 +80,7 @@ func (m *MicroserviceRequest) Reset()         { *m = MicroserviceRequest{} }
 func (m *MicroserviceRequest) String() string { return proto.CompactTextString(m) }
 func (*MicroserviceRequest) ProtoMessage()    {}
 func (*MicroserviceRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_microservice_bbfa2ac3f95c9cd0, []int{1}
+	return fileDescriptor_microservice_b78ff35aeb513d86, []int{1}
 }
 func (m *MicroserviceRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MicroserviceRequest.Unmarshal(m, b)
@@ -118,7 +118,7 @@ func (m *MicroserviceResponse) Reset()         { *m = MicroserviceResponse{} }
 func (m *MicroserviceResponse) String() string { return proto.CompactTextString(m) }
 func (*MicroserviceResponse) ProtoMessage()    {}
 func (*MicroserviceResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_microservice_bbfa2ac3f95c9cd0, []int{2}
+	return fileDescriptor_microservice_b78ff35aeb513d86, []int{2}
 }
 func (m *MicroserviceResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MicroserviceResponse.Unmarshal(m, b)
@@ -163,8 +163,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MicroserviceServiceClient interface {
-	// Unary
-	Microservice(ctx context.Context, in *MicroserviceRequest, opts ...grpc.CallOption) (*MicroserviceResponse, error)
+	// Clent Streaming
+	Microservice(ctx context.Context, opts ...grpc.CallOption) (MicroserviceService_MicroserviceClient, error)
 }
 
 type microserviceServiceClient struct {
@@ -175,62 +175,96 @@ func NewMicroserviceServiceClient(cc *grpc.ClientConn) MicroserviceServiceClient
 	return &microserviceServiceClient{cc}
 }
 
-func (c *microserviceServiceClient) Microservice(ctx context.Context, in *MicroserviceRequest, opts ...grpc.CallOption) (*MicroserviceResponse, error) {
-	out := new(MicroserviceResponse)
-	err := c.cc.Invoke(ctx, "/microservice.MicroserviceService/Microservice", in, out, opts...)
+func (c *microserviceServiceClient) Microservice(ctx context.Context, opts ...grpc.CallOption) (MicroserviceService_MicroserviceClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_MicroserviceService_serviceDesc.Streams[0], "/microservice.MicroserviceService/Microservice", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &microserviceServiceMicroserviceClient{stream}
+	return x, nil
+}
+
+type MicroserviceService_MicroserviceClient interface {
+	Send(*MicroserviceRequest) error
+	CloseAndRecv() (*MicroserviceResponse, error)
+	grpc.ClientStream
+}
+
+type microserviceServiceMicroserviceClient struct {
+	grpc.ClientStream
+}
+
+func (x *microserviceServiceMicroserviceClient) Send(m *MicroserviceRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *microserviceServiceMicroserviceClient) CloseAndRecv() (*MicroserviceResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(MicroserviceResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // MicroserviceServiceServer is the server API for MicroserviceService service.
 type MicroserviceServiceServer interface {
-	// Unary
-	Microservice(context.Context, *MicroserviceRequest) (*MicroserviceResponse, error)
+	// Clent Streaming
+	Microservice(MicroserviceService_MicroserviceServer) error
 }
 
 func RegisterMicroserviceServiceServer(s *grpc.Server, srv MicroserviceServiceServer) {
 	s.RegisterService(&_MicroserviceService_serviceDesc, srv)
 }
 
-func _MicroserviceService_Microservice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MicroserviceRequest)
-	if err := dec(in); err != nil {
+func _MicroserviceService_Microservice_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(MicroserviceServiceServer).Microservice(&microserviceServiceMicroserviceServer{stream})
+}
+
+type MicroserviceService_MicroserviceServer interface {
+	SendAndClose(*MicroserviceResponse) error
+	Recv() (*MicroserviceRequest, error)
+	grpc.ServerStream
+}
+
+type microserviceServiceMicroserviceServer struct {
+	grpc.ServerStream
+}
+
+func (x *microserviceServiceMicroserviceServer) SendAndClose(m *MicroserviceResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *microserviceServiceMicroserviceServer) Recv() (*MicroserviceRequest, error) {
+	m := new(MicroserviceRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(MicroserviceServiceServer).Microservice(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/microservice.MicroserviceService/Microservice",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MicroserviceServiceServer).Microservice(ctx, req.(*MicroserviceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return m, nil
 }
 
 var _MicroserviceService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "microservice.MicroserviceService",
 	HandlerType: (*MicroserviceServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "Microservice",
-			Handler:    _MicroserviceService_Microservice_Handler,
+			StreamName:    "Microservice",
+			Handler:       _MicroserviceService_Microservice_Handler,
+			ClientStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "microservice/microservicepb/microservice.proto",
 }
 
 func init() {
-	proto.RegisterFile("microservice/microservicepb/microservice.proto", fileDescriptor_microservice_bbfa2ac3f95c9cd0)
+	proto.RegisterFile("microservice/microservicepb/microservice.proto", fileDescriptor_microservice_b78ff35aeb513d86)
 }
 
-var fileDescriptor_microservice_bbfa2ac3f95c9cd0 = []byte{
-	// 197 bytes of a gzipped FileDescriptorProto
+var fileDescriptor_microservice_b78ff35aeb513d86 = []byte{
+	// 199 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0xd2, 0xcb, 0xcd, 0x4c, 0x2e,
 	0xca, 0x2f, 0x4e, 0x2d, 0x2a, 0xcb, 0x4c, 0x4e, 0xd5, 0x47, 0xe6, 0x14, 0x24, 0xa1, 0x70, 0xf5,
 	0x0a, 0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0x78, 0x90, 0xc5, 0x94, 0xbc, 0xb8, 0x78, 0x7c, 0x91, 0xf8,
@@ -240,8 +274,8 @@ var fileDescriptor_microservice_bbfa2ac3f95c9cd0 = []byte{
 	0x15, 0x94, 0x5a, 0x58, 0x9a, 0x5a, 0x5c, 0x22, 0x64, 0xc7, 0x85, 0x62, 0x25, 0xd8, 0x50, 0x6e,
 	0x23, 0x29, 0x14, 0x77, 0xeb, 0xa1, 0x68, 0x44, 0x75, 0xa2, 0x1e, 0x97, 0x08, 0xaa, 0xb1, 0xc5,
 	0x05, 0xf9, 0x79, 0xc5, 0xa9, 0x42, 0x62, 0x5c, 0x6c, 0x40, 0x76, 0x69, 0x4e, 0x09, 0xd4, 0x99,
-	0x50, 0x9e, 0x51, 0x1e, 0xaa, 0x33, 0x82, 0xa1, 0x3e, 0x0b, 0x47, 0xf3, 0xa9, 0x22, 0x1e, 0x07,
-	0x40, 0x5c, 0x2e, 0xa5, 0x84, 0x4f, 0x09, 0xc4, 0x15, 0x4a, 0x0c, 0x4e, 0x02, 0x51, 0x7c, 0xa8,
-	0xa1, 0x9e, 0xc4, 0x06, 0x0e, 0x69, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x30, 0xf8, 0xa3,
-	0x2d, 0x9b, 0x01, 0x00, 0x00,
+	0x50, 0x9e, 0x51, 0x01, 0xaa, 0x33, 0x82, 0xa1, 0x3e, 0x8b, 0x44, 0xf3, 0xa9, 0x22, 0x1e, 0x07,
+	0x40, 0x5c, 0x2e, 0xa5, 0x84, 0x4f, 0x09, 0xc4, 0x15, 0x4a, 0x0c, 0x1a, 0x8c, 0x4e, 0x02, 0x51,
+	0x7c, 0xa8, 0xe1, 0x9e, 0xc4, 0x06, 0x0e, 0x6b, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x74,
+	0x73, 0xb5, 0x6c, 0x9d, 0x01, 0x00, 0x00,
 }

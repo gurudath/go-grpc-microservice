@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go-grpc-microservice/microservice/microservicepb"
 	"log"
+	"time"
 
 	"google.golang.org/grpc"
 )
@@ -20,22 +21,64 @@ func main() {
 	defer cc.Close()
 
 	c := microservicepb.NewMicroserviceServiceClient(cc)
-	// fmt.Printf("Creating client: %f\n", c)
-	doUnary(c)
+	doClientStreamc(c)
 
 }
 
-func doUnary(c microservicepb.MicroserviceServiceClient) {
-	fmt.Println("Starting Unary")
-	req := &microservicepb.MicroserviceRequest{
-		Microservice: &microservicepb.Microservice{
-			FirstName: "Gurudath",
-			LastName:  "BN",
+func doClientStreamc(c microservicepb.MicroserviceServiceClient) {
+	fmt.Println("Starting doClientStreamc")
+
+	request := []*microservicepb.MicroserviceRequest{
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath1",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath2",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath3",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath4",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath5",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath6",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath7",
+			},
 		},
 	}
-	res, err := c.Microservice(context.Background(), req)
+	stream, err := c.Microservice(context.Background())
 	if err != nil {
 		log.Fatalf("Error Client %v", err)
 	}
-	log.Printf("Response of Microservice: %v", res.Result)
+
+	for _, req := range request {
+		fmt.Printf(" Sending req %v\n", req)
+		stream.Send(req)
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("Error Client CloseAndRecv %v", err)
+	}
+	log.Printf("Response of Microservice: %v", res)
 }

@@ -17,6 +17,6 @@ message MicroserviceResponse {
 }
 
 service MicroserviceService { 
-    // Unary
-    rpc Microservice(MicroserviceRequest) returns (MicroserviceResponse) {};
+    // Clent Streaming
+    rpc Microservice(stream MicroserviceRequest) returns (MicroserviceResponse) {};
 }
