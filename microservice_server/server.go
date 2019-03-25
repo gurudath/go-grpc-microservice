@@ -1,9 +1,9 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"go-grpc-microservice/microservice/microservicepb"
+	"io"
 	"log"
 	"net"
 
@@ -12,14 +12,27 @@ import (
 
 type server struct{}
 
-func (*server) Microservice(ctx context.Context, req *microservicepb.MicroserviceRequest) (*microservicepb.MicroserviceResponse, error) {
-	firstName := req.GetMicroservice().GetFirstName()
-	result := "Hellow " + firstName
-	res := &microservicepb.MicroserviceResponse{
-		Result: result,
+func (*server) Microservice(stream microservicepb.MicroserviceService_MicroserviceServer) error {
+	fmt.Println("Microservice Bi Direction")
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("Error in server %v", err)
+			return err
+		}
+		firstName := req.GetMicroservice().GetFirstName()
+		result := "Hellow " + firstName
+		stdErr := stream.Send(&microservicepb.MicroserviceResponse{
+			Result: result,
+		})
+		if stdErr != nil {
+			log.Fatalf("Error in data from client: %v", stdErr)
+			return stdErr
+		}
 	}
-	log.Printf("Request of Microservice: %v", req)
-	return res, nil
 }
 
 func main() {

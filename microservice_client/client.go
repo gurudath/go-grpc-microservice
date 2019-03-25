@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"go-grpc-microservice/microservice/microservicepb"
+	"io"
 	"log"
+	"time"
 
 	"google.golang.org/grpc"
 )
@@ -20,22 +22,97 @@ func main() {
 	defer cc.Close()
 
 	c := microservicepb.NewMicroserviceServiceClient(cc)
-	// fmt.Printf("Creating client: %f\n", c)
-	doUnary(c)
+	doBiDirectionMicroservice(c)
 
 }
 
-func doUnary(c microservicepb.MicroserviceServiceClient) {
-	fmt.Println("Starting Unary")
-	req := &microservicepb.MicroserviceRequest{
-		Microservice: &microservicepb.Microservice{
-			FirstName: "Gurudath",
-			LastName:  "BN",
+func doBiDirectionMicroservice(c microservicepb.MicroserviceServiceClient) {
+	fmt.Println("Microservice Bi Direction")
+
+	stream, err := c.Microservice(context.Background())
+
+	if err != nil {
+		log.Fatalf("Error while creating stream: %v", err)
+		return
+	}
+
+	requests := []*microservicepb.MicroserviceRequest{
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath1",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath2",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath3",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath4",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath5",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath6",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath7",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath8",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath9",
+			},
+		},
+		&microservicepb.MicroserviceRequest{
+			Microservice: &microservicepb.Microservice{
+				FirstName: "Gurudath10",
+			},
 		},
 	}
-	res, err := c.Microservice(context.Background(), req)
-	if err != nil {
-		log.Fatalf("Error Client %v", err)
-	}
-	log.Printf("Response of Microservice: %v", res.Result)
+	waitc := make(chan struct{})
+
+	go func() {
+		for _, req := range requests {
+			fmt.Printf("Sending Message %v\n", req)
+			stream.Send(req)
+			time.Sleep(1000 * time.Millisecond)
+		}
+		stream.CloseSend()
+	}()
+
+	go func() {
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatalf("Error while reciving: %v\n", err)
+				break
+			}
+			fmt.Printf("Recived: %v\n", res.GetResult())
+		}
+		close(waitc)
+	}()
+
+	<-waitc
 }
